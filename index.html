@@ -1,0 +1,1559 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1,2,3 e Já! - Aventura Matemática</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #000080 0%, #006400 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: #FFFFFF;
+        }
+
+        .screen {
+            display: none;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .title {
+            font-size: 3rem;
+            color: #FFFF00;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+            margin-bottom: 30px;
+            text-align: center;
+            animation: bounce 2s infinite;
+            font-weight: bold;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        .character-selection {
+            display: flex;
+            gap: 40px;
+            margin: 30px 0;
+        }
+
+        .character {
+            background: #FFFFFF;
+            border: 4px solid #FFFF00;
+            border-radius: 20px;
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+            color: #000000;
+        }
+
+        .character:hover {
+            transform: scale(1.05);
+            border-color: #FF0000;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.7);
+        }
+
+        .character.selected {
+            border-color: #FF0000;
+            background: #FFFF00;
+            transform: scale(1.1);
+            color: #000000;
+        }
+
+        .character-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+
+        .button {
+            background: linear-gradient(45deg, #FF0000, #FF6600);
+            color: #FFFFFF;
+            border: 3px solid #FFFF00;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            margin: 10px;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.7);
+            background: linear-gradient(45deg, #FF6600, #FF0000);
+        }
+
+        .button:disabled {
+            background: #666666;
+            color: #CCCCCC;
+            border-color: #999999;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .map-container {
+            width: 100%;
+            max-width: 800px;
+            height: 600px;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600"><defs><linearGradient id="grass" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:%2398FB98;stop-opacity:1" /><stop offset="100%" style="stop-color:%2365a765;stop-opacity:1" /></linearGradient></defs><rect width="800" height="600" fill="url(%23grass)"/><path d="M100 500 Q200 450 300 500 T500 450 T700 400" stroke="%238B4513" stroke-width="8" fill="none"/></svg>') center/cover;
+            position: relative;
+            border: 4px solid #8B4513;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .level-point {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .level-point:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+
+        .level-point.completed {
+            background: linear-gradient(45deg, #00FF00, #32CD32);
+            color: #000000;
+            font-weight: bold;
+        }
+
+        .level-point.current {
+            background: linear-gradient(45deg, #FF0000, #FF6600);
+            animation: pulse 2s infinite;
+            color: #FFFFFF;
+            font-weight: bold;
+        }
+
+        .level-point.locked {
+            background: #333333;
+            color: #999999;
+            cursor: not-allowed;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .castle {
+            position: absolute;
+            top: 50px;
+            right: 100px;
+            font-size: 4rem;
+            color: #8B4513;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .game-area {
+            background: #FFFFFF;
+            border: 4px solid #000000;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 600px;
+            margin: 20px 0;
+            color: #000000;
+        }
+
+        .question {
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .option {
+            background: #FFFF00;
+            border: 4px solid #000000;
+            border-radius: 15px;
+            padding: 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            color: #000000;
+        }
+
+        .option:hover {
+            background: #FFFFFF;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .option.correct {
+            background: #00FF00;
+            border-color: #008000;
+            color: #000000;
+        }
+
+        .option.wrong {
+            background: #FF0000;
+            border-color: #800000;
+            color: #FFFFFF;
+        }
+
+        .stars {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .star {
+            font-size: 2rem;
+            color: #ddd;
+            transition: all 0.3s ease;
+        }
+
+        .star.earned {
+            color: #FFD700;
+            animation: starShine 1s ease-in-out;
+        }
+
+        @keyframes starShine {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .progress {
+            background: #E0E0E0;
+            height: 10px;
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(45deg, #4ECDC4, #44A08D);
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+
+        .feedback {
+            text-align: center;
+            font-size: 1.5rem;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .feedback.success {
+            background: #C8E6C9;
+            color: #2E7D32;
+        }
+
+        .feedback.error {
+            background: #FFCDD2;
+            color: #C62828;
+        }
+
+        .level-info {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #000000;
+            color: #FFFF00;
+            border: 3px solid #FFFFFF;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            font-weight: bold;
+        }
+
+        .sound-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .sound-btn {
+            background: #FFFF00;
+            border: 3px solid #000000;
+            color: #000000;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .sound-btn:hover {
+            background: #FFFFFF;
+        }
+
+        .instructions {
+            background: #FFF8DC;
+            border: 3px solid #FFD700;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .celebration {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255,255,255,0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+            text-align: center;
+            z-index: 1000;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #FFD700;
+            animation: confetti-fall 3s linear infinite;
+        }
+
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100vh) rotate(0deg); }
+            100% { transform: translateY(100vh) rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .title { font-size: 2rem; }
+            .character-selection { flex-direction: column; align-items: center; }
+            .map-container { height: 400px; }
+            .level-point { width: 60px; height: 60px; font-size: 1.5rem; }
+            .question { font-size: 1.5rem; }
+        }
+
+        .accessible-text {
+            position: absolute;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+        }
+
+        /* Estilos para leitores de tela */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Legenda principal */
+        .main-caption {
+            background: #000000;
+            color: #FFFF00;
+            border: 3px solid #FFFFFF;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            max-width: 600px;
+        }
+
+        /* Melhor contraste para texto importante */
+        .high-contrast-text {
+            color: #FFFFFF;
+            text-shadow: 2px 2px 4px rgba(0,0,0,1);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- Tela de Seleção de Personagem -->
+    <div id="character-screen" class="screen active">
+        <h1 class="title" role="banner" aria-label="1,2,3 e Já! Jogo Educacional de Matemática">🏰 1,2,3 e Já! 🏰</h1>
+        
+        <div class="main-caption" role="complementary" aria-label="Descrição do jogo">
+            <h2>Aventura Matemática Educacional</h2>
+            <p>Bem-vindos, jovens exploradores! Escolha seu personagem e embarque numa aventura mágica onde você descobrirá que aprender matemática pode ser muito divertido!</p>
+            <p><strong>Este jogo é acessível para:</strong></p>
+            <ul style="text-align: left; display: inline-block;">
+                <li>✓ Crianças com baixa visão (alto contraste)</li>
+                <li>✓ Crianças cegas (leitor de tela)</li>
+                <li>✓ Crianças surdas (feedback visual)</li>
+                <li>✓ Navegação por teclado e toque</li>
+            </ul>
+        </div>
+        
+        <div class="character-selection" role="group" aria-label="Seleção de personagem">
+            <div class="character" data-character="boy" role="button" tabindex="0" 
+                 aria-label="Escolher João Explorador - Personagem masculino corajoso e curioso">
+                <div class="character-icon" aria-hidden="true">👦</div>
+                <h3>João Explorador</h3>
+                <p>Corajoso e curioso</p>
+                <span class="sr-only">Pressione Enter ou clique para selecionar João</span>
+            </div>
+            <div class="character" data-character="girl" role="button" tabindex="0"
+                 aria-label="Escolher Maria Aventureira - Personagem feminino esperta e determinada">
+                <div class="character-icon" aria-hidden="true">👧</div>
+                <h3>Maria Aventureira</h3>
+                <p>Esperta e determinada</p>
+                <span class="sr-only">Pressione Enter ou clique para selecionar Maria</span>
+            </div>
+        </div>
+        
+        <button class="button" id="start-btn" disabled aria-label="Começar aventura matemática - desabilitado até selecionar personagem">
+            Começar Aventura!
+        </button>
+        
+        <div class="sr-only" id="selection-announcement" aria-live="polite" aria-atomic="true"></div>
+    </div>
+
+    <!-- Tela do Mapa -->
+    <div id="map-screen" class="screen">
+        <div class="level-info" role="complementary" aria-label="Informações do progresso">
+            <div>Nível: <span id="current-level" aria-label="Nível atual">1</span>/4</div>
+            <div>Estrelas: <span id="total-stars" aria-label="Total de estrelas conquistadas">0</span></div>
+            <div>Personagem: <span id="selected-character" aria-label="Personagem escolhido"></span></div>
+        </div>
+
+        <div class="sound-controls" role="group" aria-label="Controles de áudio e ajuda">
+            <button class="sound-btn" id="sound-toggle" title="Alternar som" aria-label="Botão de som - ativado">🔊</button>
+            <button class="sound-btn" id="help-btn" title="Ajuda" aria-label="Mostrar instruções do jogo">❓</button>
+        </div>
+
+        <h2 class="title high-contrast-text" role="banner">Mapa Mágico da Aventura</h2>
+        
+        <div class="instructions" role="complementary">
+            <p style="color: black"><strong style="color: black">JOGO LINEAR:</strong> Complete os níveis em ordem para avançar!</p>
+            <p style="color: black">Clique no número <span style="color: #FF0000; font-weight: bold;">VERMELHO</span> para jogar o próximo nível</p>
+        </div>
+        
+        <div class="map-container" role="main" aria-label="Mapa interativo com 4 níveis matemáticos">
+            <div class="castle" aria-hidden="true">🏰</div>
+            
+            <div class="level-point current" data-level="1" style="left: 100px; bottom: 100px;" 
+                 role="button" tabindex="0" aria-label="Nível 1 - Caça aos Números - Disponível para jogar">
+                1️⃣
+                <span class="sr-only">Pressione Enter para jogar Caça aos Números</span>
+            </div>
+            
+            <div class="level-point locked" data-level="2" style="left: 250px; bottom: 150px;" 
+                 role="button" tabindex="-1" aria-label="Nível 2 - Contagem Mágica - Bloqueado até completar nível 1">
+                2️⃣
+                <span class="sr-only">Nível bloqueado</span>
+            </div>
+            
+            <div class="level-point locked" data-level="3" style="left: 450px; bottom: 200px;" 
+                 role="button" tabindex="-1" aria-label="Nível 3 - Desafio da Ponte - Bloqueado até completar nível 2">
+                3️⃣
+                <span class="sr-only">Nível bloqueado</span>
+            </div>
+            
+            <div class="level-point locked" data-level="4" style="left: 600px; bottom: 250px;" 
+                 role="button" tabindex="-1" aria-label="Nível 4 - Ordem Secreta - Bloqueado até completar nível 3">
+                4️⃣
+                <span class="sr-only">Nível bloqueado</span>
+            </div>
+        </div>
+        
+        <div class="progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Progresso geral do jogo">
+            <div class="progress-bar" id="overall-progress" style="width: 0%"></div>
+        </div>
+        
+        <div class="sr-only" id="map-announcement" aria-live="polite" aria-atomic="true"></div>
+    </div>
+
+    <!-- Tela do Jogo -->
+    <div id="game-screen" class="screen">
+        <div class="level-info">
+            <div>Nível: <span id="game-level">1</span> - <span id="game-title">Caça aos Números</span></div>
+            <div>Estrelas: <span id="game-stars">0</span>/3</div>
+        </div>
+
+        <div class="sound-controls">
+            <button class="sound-btn" id="back-to-map">🗺️</button>
+        </div>
+
+        <div class="game-area">
+            <div class="instructions" id="game-instructions">
+                Encontre todos os números de 1 a 10 na ordem correta!
+            </div>
+            
+            <div class="question" id="game-question">
+                Qual é o próximo número?
+            </div>
+            
+            <div class="options" id="game-options">
+                <!-- Opções serão geradas dinamicamente -->
+            </div>
+            
+            <div class="stars" id="star-display">
+                <span class="star">⭐</span>
+                <span class="star">⭐</span>
+                <span class="star">⭐</span>
+            </div>
+            
+            <div class="feedback" id="feedback" style="display: none;">
+                Muito bem! Continue assim!
+            </div>
+            
+            <button class="button" id="next-question" style="display: none;">Próxima Pergunta</button>
+        </div>
+    </div>
+
+    <!-- Tela de Vitória -->
+    <div id="victory-screen" class="screen">
+        <div class="celebration">
+            <h1 style="color: #FFD700; margin-bottom: 20px;">🎉 Parabéns! 🎉</h1>
+            <p style="font-size: 1.5rem; margin-bottom: 20px;">
+                Você completou sua jornada no Castelo da Matemática!
+            </p>
+            <div class="stars">
+                <span class="star earned">⭐</span>
+                <span class="star earned">⭐</span>
+                <span class="star earned">⭐</span>
+                <span class="star earned">⭐</span>
+                <span class="star earned">⭐</span>
+            </div>
+            <p style="font-size: 1.2rem; margin: 20px 0; max-width: 400px;">
+                O maior tesouro que você encontrou não é de ouro ou prata, mas sim a confiança em aprender brincando! 
+                A matemática pode ser divertida e útil em sua vida.
+            </p>
+            <button class="button" id="play-again">Jogar Novamente</button>
+            <button class="button" id="explore-levels">Explorar Níveis</button>
+        </div>
+    </div>
+
+    <script>
+        // Estado do jogo
+        let gameState = {
+            selectedCharacter: '',
+            currentLevel: 1,
+            totalStars: 0,
+            levelStars: 0,
+            soundEnabled: true,
+            completedLevels: [],
+            currentQuestion: 0,
+            gameData: {
+                1: { // Caça aos Números
+                    title: "Caça aos Números",
+                    instructions: "Encontre os números de 1 a 10 na ordem correta!",
+                    questions: [
+                        { question: "Qual número vem depois do 1?", options: [2, 4, 3, 5], correct: 0 },
+                        { question: "Qual número vem depois do 2?", options: [1, 3, 4, 5], correct: 1 },
+                        { question: "Qual número vem depois do 3?", options: [5, 2, 4, 6], correct: 2 },
+                        { question: "Qual número vem depois do 4?", options: [3, 6, 7, 5], correct: 3 },
+                        { question: "Qual número vem depois do 5?", options: [6, 4, 7, 8], correct: 0 }
+                    ]
+                },
+                2: { // Contagem Mágica
+                    title: "Contagem Mágica",
+                    instructions: "Conte os objetos mágicos e encontre a resposta certa!",
+                    questions: [
+                        { question: "Quantas estrelas você vê? ⭐⭐⭐", options: [2, 3, 4, 1], correct: 1 },
+                        { question: "Quantos corações você vê? ❤️❤️❤️❤️❤️", options: [4, 6, 5, 3], correct: 2 },
+                        { question: "Quantas luas você vê? 🌙🌙", options: [2, 1, 3, 4], correct: 0 },
+                        { question: "Quantos sóis você vê? ☀️☀️☀️☀️", options: [3, 5, 4, 2], correct: 2 },
+                        { question: "Quantas flores você vê? 🌸🌸🌸🌸🌸🌸", options: [5, 6, 7, 4], correct: 1 }
+                    ]
+                },
+                3: { // Desafio da Ponte (Soma)
+                    title: "Desafio da Ponte",
+                    instructions: "Resolva as somas para atravessar a ponte mágica!",
+                    questions: [
+                        { question: "2 + 1 = ?", options: [2, 3, 4, 5], correct: 1 },
+                        { question: "3 + 2 = ?", options: [4, 5, 6, 3], correct: 1 },
+                        { question: "1 + 4 = ?", options: [5, 4, 6, 3], correct: 0 },
+                        { question: "2 + 3 = ?", options: [4, 5, 6, 7], correct: 1 },
+                        { question: "4 + 1 = ?", options: [6, 4, 5, 3], correct: 2 }
+                    ]
+                },
+                4: { // Ordem Secreta (Sequências)
+                    title: "Ordem Secreta",
+                    instructions: "Complete as sequências mágicas para abrir o castelo!",
+                    questions: [
+                        { question: "Complete: 1, 2, 3, ?", options: [5, 4, 6, 3], correct: 1 },
+                        { question: "Complete: 2, 4, 6, ?", options: [7, 8, 9, 10], correct: 1 },
+                        { question: "Complete: 5, 4, 3, ?", options: [2, 1, 6, 7], correct: 0 },
+                        { question: "Complete: 1, 3, 5, ?", options: [6, 7, 8, 4], correct: 1 },
+                        { question: "Complete: 10, 9, 8, ?", options: [6, 7, 5, 9], correct: 1 }
+                    ]
+                }
+            }
+        };
+
+        // Elementos DOM
+        const screens = {
+            character: document.getElementById('character-screen'),
+            map: document.getElementById('map-screen'),
+            game: document.getElementById('game-screen'),
+            victory: document.getElementById('victory-screen')
+        };
+
+        // Sistema de áudio real usando Web Audio API
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Função para criar tons musicais
+        function createTone(frequency, duration, type = 'sine') {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+            oscillator.type = type;
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+        
+        // Função para criar melodias
+        function createMelody(notes, noteDuration = 0.2) {
+            notes.forEach((frequency, index) => {
+                setTimeout(() => {
+                    if (gameState.soundEnabled) {
+                        createTone(frequency, noteDuration);
+                    }
+                }, index * noteDuration * 1000);
+            });
+        }
+        
+        // Funções de áudio específicas
+        function playSound(type) {
+            if (!gameState.soundEnabled) return;
+            
+            try {
+                // Garantir que o contexto de áudio está ativo
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                
+                switch(type) {
+                    case 'select':
+                        createTone(800, 0.1);
+                        break;
+                    case 'click':
+                        createTone(600, 0.1);
+                        break;
+                    case 'correct':
+                        // Melodia de sucesso: Dó-Mi-Sol
+                        createMelody([523.25, 659.25, 783.99], 0.2);
+                        break;
+                    case 'wrong':
+                        // Som de erro descendente
+                        createMelody([400, 350, 300], 0.15);
+                        break;
+                    case 'start':
+                        // Melodia de início alegre
+                        createMelody([523.25, 587.33, 659.25, 698.46, 783.99], 0.3);
+                        break;
+                    case 'levelComplete':
+                        // Fanfarra de nível completo
+                        createMelody([659.25, 783.99, 987.77, 783.99, 987.77], 0.25);
+                        break;
+                    case 'victory':
+                        // Música de vitória épica
+                        createMelody([
+                            523.25, 659.25, 783.99, 1046.50, 
+                            783.99, 1046.50, 1244.51, 1046.50
+                        ], 0.3);
+                        break;
+                    case 'back':
+                        createTone(400, 0.1);
+                        break;
+                    case 'toggle':
+                        createTone(700, 0.1);
+                        break;
+                    case 'restart':
+                        createMelody([783.99, 659.25, 523.25], 0.2);
+                        break;
+                    case 'explore':
+                        createMelody([523.25, 698.46, 783.99], 0.2);
+                        break;
+                    default:
+                        createTone(500, 0.1);
+                }
+            } catch (error) {
+                console.log('Áudio não disponível:', error);
+            }
+        }
+
+        // Função de síntese de voz HABILITADA para acessibilidade
+        function speak(text, priority = false) {
+            if (!gameState.soundEnabled && !priority) return;
+            
+            if (!('speechSynthesis' in window)) {
+                console.log(`🎤 Narração (não suportada): ${text}`);
+                return;
+            }
+            
+            // Cancelar qualquer fala anterior se for prioridade
+            if (priority) {
+                speechSynthesis.cancel();
+            }
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'pt-BR';
+            utterance.rate = 0.7; // Velocidade mais lenta para acessibilidade
+            utterance.pitch = 1.0; // Tom natural
+            utterance.volume = 0.9;
+            
+            // Tentar usar uma voz em português se disponível
+            const voices = speechSynthesis.getVoices();
+            const portugueseVoice = voices.find(voice => voice.lang.startsWith('pt'));
+            
+            if (portugueseVoice) {
+                utterance.voice = portugueseVoice;
+            }
+            
+            speechSynthesis.speak(utterance);
+            
+            // Anunciar também para leitores de tela
+            announceToScreenReader(text);
+        }
+        
+        // Função para anunciar para leitores de tela
+        function announceToScreenReader(text) {
+            const announcement = document.createElement('div');
+            announcement.setAttribute('aria-live', 'polite');
+            announcement.setAttribute('aria-atomic', 'true');
+            announcement.className = 'sr-only';
+            announcement.textContent = text;
+            
+            document.body.appendChild(announcement);
+            
+            // Remove após anunciar
+            setTimeout(() => {
+                document.body.removeChild(announcement);
+            }, 1000);
+        }
+        
+        // Carregar vozes para acessibilidade
+        if ('speechSynthesis' in window) {
+            speechSynthesis.onvoiceschanged = function() {
+                console.log('🎤 Vozes de síntese carregadas para acessibilidade');
+                // Anunciar disponibilidade de narração
+                setTimeout(() => {
+                    speak('Sistema de narração ativo. Este jogo é acessível para deficientes visuais.', true);
+                }, 2000);
+            };
+        }
+        
+        // Música de fundo suave (opcional)
+        let backgroundMusic = null;
+        
+        function startBackgroundMusic() {
+            if (!gameState.soundEnabled || backgroundMusic) return;
+            
+            const playMelody = () => {
+                if (gameState.soundEnabled) {
+                    // Melodia suave e repetitiva
+                    const melody = [523.25, 587.33, 659.25, 587.33, 523.25, 440.00, 493.88, 523.25];
+                    createMelody(melody.map(f => f * 0.5), 0.8); // Frequências mais baixas e mais lentas
+                }
+            };
+            
+            // Tocar a cada 10 segundos
+            backgroundMusic = setInterval(playMelody, 10000);
+        }
+        
+        function stopBackgroundMusic() {
+            if (backgroundMusic) {
+                clearInterval(backgroundMusic);
+                backgroundMusic = null;
+            }
+        }
+
+        // Navegação entre telas
+        function showScreen(screenName) {
+            Object.values(screens).forEach(screen => screen.classList.remove('active'));
+            screens[screenName].classList.add('active');
+        }
+
+        // Seleção de personagem com acessibilidade
+        document.querySelectorAll('.character').forEach(char => {
+            char.addEventListener('click', selectCharacter);
+            char.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    selectCharacter.call(char);
+                }
+            });
+        });
+        
+        function selectCharacter() {
+            document.querySelectorAll('.character').forEach(c => c.classList.remove('selected'));
+            this.classList.add('selected');
+            gameState.selectedCharacter = this.dataset.character;
+            
+            const characterName = this.dataset.character === 'boy' ? 'João Explorador' : 'Maria Aventureira';
+            
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('start-btn').setAttribute('aria-label', `Começar aventura com ${characterName}`);
+            
+            // Anunciar seleção
+            const announcement = `${characterName} selecionado. Pressione o botão Começar Aventura para iniciar.`;
+            document.getElementById('selection-announcement').textContent = announcement;
+            speak(announcement);
+            playSound('select');
+        }
+
+        // Iniciar jogo
+        document.getElementById('start-btn').addEventListener('click', () => {
+            const characterName = gameState.selectedCharacter === 'boy' ? 'João Explorador' : 'Maria Aventureira';
+            document.getElementById('selected-character').textContent = characterName;
+            updateMapDisplay();
+            showScreen('map');
+            playSound('start');
+            speak(`Bem-vindo ao Castelo da Matemática, ${characterName}!`);
+        });
+
+        // Atualizar display do mapa com acessibilidade
+        function updateMapDisplay() {
+            document.getElementById('current-level').textContent = gameState.currentLevel;
+            document.getElementById('total-stars').textContent = gameState.totalStars;
+            
+            // Atualizar pontos do mapa
+            document.querySelectorAll('.level-point').forEach((point, index) => {
+                const level = index + 1;
+                point.classList.remove('current', 'completed', 'locked');
+                
+                if (gameState.completedLevels.includes(level)) {
+                    point.classList.add('completed');
+                    point.setAttribute('tabindex', '0');
+                    point.setAttribute('aria-label', `Nível ${level} - Completado - Clique para rejogar`);
+                } else if (level === gameState.currentLevel) {
+                    point.classList.add('current');
+                    point.setAttribute('tabindex', '0');
+                    point.setAttribute('aria-label', `Nível ${level} - Atual - Clique para jogar`);
+                } else if (level > gameState.currentLevel) {
+                    point.classList.add('locked');
+                    point.setAttribute('tabindex', '-1');
+                    point.setAttribute('aria-label', `Nível ${level} - Bloqueado - Complete o nível anterior primeiro`);
+                }
+            });
+            
+            // Atualizar barra de progresso
+            const progress = (gameState.completedLevels.length / 4) * 100;
+            document.getElementById('overall-progress').style.width = progress + '%';
+            document.getElementById('overall-progress').parentElement.setAttribute('aria-valuenow', Math.round(progress));
+            
+            // Anunciar progresso
+            const progressText = `Progresso: ${gameState.completedLevels.length} de 4 níveis completados. ${gameState.totalStars} estrelas conquistadas.`;
+            document.getElementById('map-announcement').textContent = progressText;
+        }
+
+        // Clique nos pontos do mapa com controle linear
+        document.querySelectorAll('.level-point').forEach(point => {
+            point.addEventListener('click', handleLevelClick);
+            point.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleLevelClick.call(point);
+                }
+            });
+        });
+        
+        function handleLevelClick() {
+            const level = parseInt(this.dataset.level);
+            
+            // JOGO LINEAR: Só permite jogar o nível atual ou níveis já completados
+            if (level === gameState.currentLevel) {
+                startLevel(level);
+                playSound('click');
+                speak(`Iniciando nível ${level}`, true);
+            } else if (gameState.completedLevels.includes(level)) {
+                startLevel(level);
+                playSound('click');
+                speak(`Rejogando nível ${level}`, true);
+            } else {
+                // Nível bloqueado
+                const message = `Nível ${level} está bloqueado. Complete o nível ${level - 1} primeiro.`;
+                speak(message, true);
+                announceToScreenReader(message);
+                playSound('wrong');
+                vibrate(200);
+            }
+        }
+
+        // Iniciar nível
+        function startLevel(level) {
+            gameState.currentQuestion = 0;
+            gameState.levelStars = 0;
+            
+            const levelData = gameState.gameData[level];
+            document.getElementById('game-level').textContent = level;
+            document.getElementById('game-title').textContent = levelData.title;
+            document.getElementById('game-instructions').textContent = levelData.instructions;
+            document.getElementById('game-stars').textContent = '0';
+            
+            // Reset estrelas
+            document.querySelectorAll('#star-display .star').forEach(star => {
+                star.classList.remove('earned');
+            });
+            
+            showQuestion(level);
+            showScreen('game');
+            speak(levelData.instructions);
+        }
+
+        // Mostrar pergunta
+        function showQuestion(level) {
+            const levelData = gameState.gameData[level];
+            const question = levelData.questions[gameState.currentQuestion];
+            
+            document.getElementById('game-question').textContent = question.question;
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('next-question').style.display = 'none';
+            
+            const optionsContainer = document.getElementById('game-options');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.textContent = option;
+                optionElement.addEventListener('click', () => selectAnswer(level, index));
+                optionsContainer.appendChild(optionElement);
+            });
+            
+            speak(question.question);
+        }
+
+        // Selecionar resposta
+        function selectAnswer(level, selectedIndex) {
+            const levelData = gameState.gameData[level];
+            const question = levelData.questions[gameState.currentQuestion];
+            const options = document.querySelectorAll('#game-options .option');
+            
+            // Desabilitar todas as opções
+            options.forEach(option => option.style.pointerEvents = 'none');
+            
+            const feedback = document.getElementById('feedback');
+            
+            if (selectedIndex === question.correct) {
+                // Resposta correta
+                options[selectedIndex].classList.add('correct');
+                feedback.textContent = 'Muito bem! Resposta correta! ⭐';
+                feedback.className = 'feedback success';
+                
+                gameState.levelStars++;
+                updateStarDisplay();
+                playSound('correct');
+                speak('Muito bem! Resposta correta!');
+                
+                // Animação da estrela
+                createConfetti();
+                
+            } else {
+                // Resposta incorreta
+                options[selectedIndex].classList.add('wrong');
+                options[question.correct].classList.add('correct');
+                feedback.textContent = 'Ops! Tente novamente na próxima pergunta!';
+                feedback.className = 'feedback error';
+                playSound('wrong');
+                speak('Ops! A resposta correta estava destacada. Vamos continuar!');
+            }
+            
+            feedback.style.display = 'block';
+            
+            setTimeout(() => {
+                gameState.currentQuestion++;
+                
+                if (gameState.currentQuestion >= levelData.questions.length) {
+                    completeLevel(level);
+                } else {
+                    showQuestion(level);
+                }
+            }, 2000);
+        }
+
+        // Atualizar display das estrelas
+        function updateStarDisplay() {
+            const stars = document.querySelectorAll('#star-display .star');
+            stars.forEach((star, index) => {
+                if (index < gameState.levelStars) {
+                    star.classList.add('earned');
+                }
+            });
+            document.getElementById('game-stars').textContent = gameState.levelStars;
+        }
+
+        // Completar nível
+        function completeLevel(level) {
+            if (!gameState.completedLevels.includes(level)) {
+                gameState.completedLevels.push(level);
+                gameState.totalStars += gameState.levelStars;
+            }
+            
+            if (level === gameState.currentLevel) {
+                gameState.currentLevel++;
+            }
+            
+            const levelData = gameState.gameData[level];
+            let message = `Parabéns! Você completou ${levelData.title}!`;
+            message += ` Você ganhou ${gameState.levelStars} estrelas!`;
+            
+            if (gameState.completedLevels.length === 4) {
+                // Jogo completo
+                setTimeout(() => {
+                    showScreen('victory');
+                    playSound('victory');
+                    speak('Parabéns! Você completou toda a aventura do Castelo da Matemática!');
+                    createFireworks();
+                }, 2000);
+            } else {
+                setTimeout(() => {
+                    showScreen('map');
+                    updateMapDisplay();
+                    playSound('levelComplete');
+                    speak(message + ' Continue sua aventura!');
+                }, 2000);
+            }
+        }
+
+        // Criar confete
+        function createConfetti() {
+            for (let i = 0; i < 20; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.backgroundColor = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7AF'][Math.floor(Math.random() * 4)];
+                confetti.style.animationDelay = Math.random() * 2 + 's';
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => confetti.remove(), 3000);
+            }
+        }
+
+        // Criar fogos de artifício para vitória final
+        function createFireworks() {
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => createConfetti(), i * 100);
+            }
+        }
+
+        // Controles de som com acessibilidade melhorada
+        document.getElementById('sound-toggle').addEventListener('click', () => {
+            gameState.soundEnabled = !gameState.soundEnabled;
+            const soundBtn = document.getElementById('sound-toggle');
+            
+            if (gameState.soundEnabled) {
+                soundBtn.textContent = '🔊';
+                soundBtn.setAttribute('aria-label', 'Botão de som - ativado - clique para desativar');
+                playSound('toggle');
+                speak('Som ativado', true);
+                startBackgroundMusic();
+            } else {
+                soundBtn.textContent = '🔇';
+                soundBtn.setAttribute('aria-label', 'Botão de som - desativado - clique para ativar');
+                stopBackgroundMusic();
+                speechSynthesis.cancel();
+                announceToScreenReader('Som desativado');
+            }
+        });
+
+        // Botão de ajuda com melhor acessibilidade
+        document.getElementById('help-btn').addEventListener('click', () => {
+            const helpText = `
+                1,2,3 e Já! - Jogo Educacional de Matemática
+                
+                Como Jogar:
+                • O jogo é LINEAR - complete os níveis em ordem
+                • Clique nos números VERMELHOS no mapa para jogar
+                • Responda as perguntas de matemática corretamente
+                • Ganhe até 3 estrelas por nível
+                • Complete todos os 4 níveis para chegar ao Castelo
+                
+                Níveis:
+                1. Caça aos Números - Aprenda a sequência dos números
+                2. Contagem Mágica - Conte objetos
+                3. Desafio da Ponte - Resolva somas simples
+                4. Ordem Secreta - Complete sequências numéricas
+                
+                Acessibilidade:
+                • Use as setas do teclado para navegar
+                • Pressione Enter ou Espaço para selecionar
+                • O jogo narra todas as ações em voz alta
+                • Cores com alto contraste para baixa visão
+                • Compatível com leitores de tela
+            `;
+            
+            alert(helpText);
+            speak('Instruções do jogo exibidas. Use as setas do teclado para navegar e Enter para selecionar.', true);
+        });
+
+        // Voltar ao mapa
+        document.getElementById('back-to-map').addEventListener('click', () => {
+            showScreen('map');
+            playSound('back');
+        });
+
+        // Botões da tela de vitória
+        document.getElementById('play-again').addEventListener('click', () => {
+            // Reset do jogo
+            gameState = {
+                selectedCharacter: '',
+                currentLevel: 1,
+                totalStars: 0,
+                levelStars: 0,
+                soundEnabled: gameState.soundEnabled,
+                completedLevels: [],
+                currentQuestion: 0,
+                gameData: gameState.gameData
+            };
+            
+            // Reset interface
+            document.querySelectorAll('.character').forEach(c => c.classList.remove('selected'));
+            document.getElementById('start-btn').disabled = true;
+            
+            showScreen('character');
+            playSound('restart');
+            speak('Vamos começar uma nova aventura!');
+        });
+
+        document.getElementById('explore-levels').addEventListener('click', () => {
+            updateMapDisplay();
+            showScreen('map');
+            playSound('explore');
+            speak('Explore os níveis que você já completou!');
+        });
+
+        // Inicializar áudio ao primeiro clique (necessário para políticas do navegador)
+        let audioInitialized = false;
+        
+        function initializeAudio() {
+            if (audioInitialized) return;
+            
+            try {
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                audioInitialized = true;
+                console.log('🔊 Sistema de áudio inicializado');
+            } catch (error) {
+                console.log('Erro ao inicializar áudio:', error);
+            }
+        }
+        
+        // Adicionar inicialização de áudio em todos os cliques
+        document.addEventListener('click', initializeAudio);
+        document.addEventListener('touchstart', initializeAudio);
+        document.addEventListener('keydown', (e) => {
+            const activeScreen = document.querySelector('.screen.active');
+            
+            if (activeScreen.id === 'character-screen') {
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                    const characters = document.querySelectorAll('.character');
+                    const selected = document.querySelector('.character.selected');
+                    let index = selected ? Array.from(characters).indexOf(selected) : -1;
+                    
+                    if (e.key === 'ArrowLeft') index = Math.max(0, index - 1);
+                    if (e.key === 'ArrowRight') index = Math.min(characters.length - 1, index + 1);
+                    
+                    characters.forEach(c => c.classList.remove('selected'));
+                    characters[index].classList.add('selected');
+                    gameState.selectedCharacter = characters[index].dataset.character;
+                    document.getElementById('start-btn').disabled = false;
+                    playSound('select');
+                }
+                
+                if (e.key === 'Enter' && !document.getElementById('start-btn').disabled) {
+                    document.getElementById('start-btn').click();
+                }
+            }
+            
+            if (activeScreen.id === 'game-screen') {
+                if (e.key >= '1' && e.key <= '4') {
+                    const options = document.querySelectorAll('#game-options .option');
+                    const index = parseInt(e.key) - 1;
+                    if (options[index] && options[index].style.pointerEvents !== 'none') {
+                        options[index].click();
+                    }
+                }
+            }
+            
+            if (e.key === 'Escape') {
+                if (activeScreen.id === 'game-screen') {
+                    document.getElementById('back-to-map').click();
+                }
+            }
+        });
+
+        // Suporte a gestos para dispositivos móveis
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            if (!touchStartX || !touchStartY) return;
+            
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+            
+            const diffX = touchStartX - touchEndX;
+            const diffY = touchStartY - touchEndY;
+            
+            // Detectar swipe horizontal para navegar entre personagens
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+                const activeScreen = document.querySelector('.screen.active');
+                if (activeScreen.id === 'character-screen') {
+                    const characters = document.querySelectorAll('.character');
+                    const selected = document.querySelector('.character.selected');
+                    let index = selected ? Array.from(characters).indexOf(selected) : 0;
+                    
+                    if (diffX > 0 && index < characters.length - 1) {
+                        // Swipe esquerda - próximo personagem
+                        index++;
+                    } else if (diffX < 0 && index > 0) {
+                        // Swipe direita - personagem anterior
+                        index--;
+                    }
+                    
+                    characters.forEach(c => c.classList.remove('selected'));
+                    characters[index].classList.add('selected');
+                    gameState.selectedCharacter = characters[index].dataset.character;
+                    document.getElementById('start-btn').disabled = false;
+                    playSound('select');
+                }
+            }
+            
+            touchStartX = 0;
+            touchStartY = 0;
+        });
+
+        // Sistema de conquistas (salvamento local simulado)
+        function saveProgress() {
+            // Em uma implementação real, isso salvaria no localStorage
+            // Como não podemos usar localStorage no Claude.ai, simulamos com console
+            console.log('💾 Progresso salvo:', {
+                completedLevels: gameState.completedLevels,
+                totalStars: gameState.totalStars,
+                currentLevel: gameState.currentLevel
+            });
+        }
+
+        function loadProgress() {
+            // Em uma implementação real, isso carregaria do localStorage
+            // Simulando carregamento de progresso
+            console.log('📁 Progresso carregado (simulado)');
+        }
+
+        // Função para criar efeitos visuais adicionais
+        function createSparkles(element) {
+            for (let i = 0; i < 5; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.innerHTML = '✨';
+                sparkle.style.position = 'absolute';
+                sparkle.style.left = Math.random() * element.offsetWidth + 'px';
+                sparkle.style.top = Math.random() * element.offsetHeight + 'px';
+                sparkle.style.fontSize = '1rem';
+                sparkle.style.animation = 'sparkle 1s ease-out forwards';
+                sparkle.style.pointerEvents = 'none';
+                
+                element.style.position = 'relative';
+                element.appendChild(sparkle);
+                
+                setTimeout(() => sparkle.remove(), 1000);
+            }
+        }
+
+        // Adicionar animação de sparkle
+        const sparkleCSS = `
+            @keyframes sparkle {
+                0% { transform: scale(0) rotate(0deg); opacity: 1; }
+                50% { transform: scale(1) rotate(180deg); opacity: 1; }
+                100% { transform: scale(0) rotate(360deg); opacity: 0; }
+            }
+        `;
+        
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = sparkleCSS;
+        document.head.appendChild(styleSheet);
+
+        // Vibração tátil real para dispositivos móveis
+        function vibrate(pattern = 100) {
+            try {
+                if (navigator.vibrate) {
+                    navigator.vibrate(pattern);
+                }
+            } catch (error) {
+                // Vibração não suportada
+            }
+        }
+
+        // Melhorar vibração para diferentes tipos de eventos
+        function playSound(type) {
+            if (!gameState.soundEnabled) return;
+            
+            try {
+                // Garantir que o contexto de áudio está ativo
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                
+                switch(type) {
+                    case 'select':
+                        createTone(800, 0.1);
+                        vibrate(50);
+                        break;
+                    case 'click':
+                        createTone(600, 0.1);
+                        vibrate(30);
+                        break;
+                    case 'correct':
+                        // Melodia de sucesso: Dó-Mi-Sol
+                        createMelody([523.25, 659.25, 783.99], 0.2);
+                        vibrate([100, 50, 100]); // Padrão de vibração celebrativa
+                        break;
+                    case 'wrong':
+                        // Som de erro descendente
+                        createMelody([400, 350, 300], 0.15);
+                        vibrate(200); // Vibração mais longa para erro
+                        break;
+                    case 'start':
+                        // Melodia de início alegre
+                        createMelody([523.25, 587.33, 659.25, 698.46, 783.99], 0.3);
+                        vibrate([100, 50, 100, 50, 150]);
+                        startBackgroundMusic();
+                        break;
+                    case 'levelComplete':
+                        // Fanfarra de nível completo
+                        createMelody([659.25, 783.99, 987.77, 783.99, 987.77], 0.25);
+                        vibrate([150, 100, 150, 100, 200]);
+                        break;
+                    case 'victory':
+                        // Música de vitória épica
+                        createMelody([
+                            523.25, 659.25, 783.99, 1046.50, 
+                            783.99, 1046.50, 1244.51, 1046.50
+                        ], 0.3);
+                        vibrate([200, 100, 200, 100, 300]);
+                        break;
+                    case 'back':
+                        createTone(400, 0.1);
+                        vibrate(40);
+                        break;
+                    case 'toggle':
+                        createTone(700, 0.1);
+                        vibrate(60);
+                        break;
+                    case 'restart':
+                        createMelody([783.99, 659.25, 523.25], 0.2);
+                        vibrate([80, 40, 80, 40, 120]);
+                        break;
+                    case 'explore':
+                        createMelody([523.25, 698.46, 783.99], 0.2);
+                        vibrate([70, 30, 70, 30, 100]);
+                        break;
+                    default:
+                        createTone(500, 0.1);
+                        vibrate(50);
+                }
+            } catch (error) {
+                console.log('Áudio não disponível:', error);
+            }
+        }
+
+        // Sistema de dicas para ajudar jogadores com dificuldades
+        let hintTimeout;
+        function showHint(level, questionIndex) {
+            const hints = {
+                1: [
+                    "Lembre-se: os números seguem uma ordem. O que vem depois do 1?",
+                    "Pense na sequência: 1, 2, 3... qual é o próximo?",
+                    "Conte nos seus dedos se precisar!",
+                    "Os números crescem um por um.",
+                    "Você está indo muito bem! Continue contando."
+                ],
+                2: [
+                    "Conte cada estrela uma por uma: 1, 2, 3...",
+                    "Use seus dedos para contar os corações!",
+                    "Conte devagar, sem pressa.",
+                    "Cada objeto conta como 1.",
+                    "Você consegue! Conte as flores uma por uma."
+                ],
+                3: [
+                    "Soma significa juntar. 2 + 1 = quantos ao todo?",
+                    "Use seus dedos: levante 3, depois mais 2. Quantos dedos você tem levantados?",
+                    "Quando somamos, o resultado fica maior.",
+                    "Pense: se você tem 2 doces e ganha mais 3, quantos doces você tem?",
+                    "Juntar os números é como juntar brinquedos!"
+                ],
+                4: [
+                    "Veja o padrão: os números estão subindo ou descendo?",
+                    "Na sequência 1, 2, 3... qual número continua a sequência?",
+                    "Alguns padrões pulam números, como 2, 4, 6...",
+                    "Observe se os números aumentam ou diminuem.",
+                    "Você está descobrindo o segredo das sequências!"
+                ]
+            };
+            
+            clearTimeout(hintTimeout);
+            hintTimeout = setTimeout(() => {
+                const hint = hints[level][questionIndex];
+                const hintElement = document.createElement('div');
+                hintElement.className = 'feedback';
+                hintElement.style.background = '#E1F5FE';
+                hintElement.style.color = '#0277BD';
+                hintElement.style.border = '2px solid #03A9F4';
+                hintElement.innerHTML = `💡 Dica: ${hint}`;
+                
+                const gameArea = document.querySelector('.game-area');
+                gameArea.appendChild(hintElement);
+                
+                speak(`Dica: ${hint}`);
+                
+                setTimeout(() => hintElement.remove(), 5000);
+            }, 10000); // Mostra dica após 10 segundos sem resposta
+        }
+
+        // Melhorar a função de mostrar pergunta com sistema de dicas
+        function showQuestion(level) {
+            const levelData = gameState.gameData[level];
+            const question = levelData.questions[gameState.currentQuestion];
+            
+            document.getElementById('game-question').textContent = question.question;
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('next-question').style.display = 'none';
+            
+            const optionsContainer = document.getElementById('game-options');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.textContent = option;
+                optionElement.addEventListener('click', () => {
+                    clearTimeout(hintTimeout);
+                    selectAnswer(level, index);
+                });
+                optionsContainer.appendChild(optionElement);
+            });
+            
+            speak(question.question);
+            
+            // Iniciar timer para dica
+            showHint(level, gameState.currentQuestion);
+        }
+
+        // Carregar progresso ao iniciar
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProgress();
+            console.log('🎮 1,2,3 e Já! - Jogo carregado e pronto!');
+            console.log('🔊 Sistema de áudio musical e narração ativo');
+            console.log('♿ Sistema de acessibilidade completo habilitado');
+            
+            // Aguardar um pouco antes da primeira narração
+            setTimeout(() => {
+                speak('Bem-vindos ao 1,2,3 e Já! Jogo educacional de matemática totalmente acessível. Escolha seu personagem para começar a aventura.', true);
+            }, 2000);
+        });
+
+        // Salvar progresso quando completar níveis
+        function completeLevel(level) {
+            if (!gameState.completedLevels.includes(level)) {
+                gameState.completedLevels.push(level);
+                gameState.totalStars += gameState.levelStars;
+                saveProgress(); // Salvar progresso
+            }
+            
+            if (level === gameState.currentLevel) {
+                gameState.currentLevel++;
+            }
+            
+            const levelData = gameState.gameData[level];
+            let message = `Parabéns! Você completou ${levelData.title}!`;
+            message += ` Você ganhou ${gameState.levelStars} estrelas!`;
+            
+            // Criar efeito de sparkles no mapa
+            setTimeout(() => {
+                const levelPoint = document.querySelector(`[data-level="${level}"]`);
+                if (levelPoint) {
+                    createSparkles(levelPoint);
+                }
+            }, 1000);
+            
+            if (gameState.completedLevels.length === 4) {
+                // Jogo completo
+                setTimeout(() => {
+                    showScreen('victory');
+                    playSound('victory');
+                    speak('Parabéns! Você completou toda a aventura do Castelo da Matemática! O maior tesouro é a confiança em aprender brincando!');
+                    createFireworks();
+                }, 2000);
+            } else {
+                setTimeout(() => {
+                    showScreen('map');
+                    updateMapDisplay();
+                    playSound('levelComplete');
+                    speak(message + ' Continue sua aventura no mapa mágico!');
+                }, 2000);
+            }
+        }
+
+        console.log('🎮 1,2,3 e Já! inicializado!');
+        console.log('📱 Suporte a toque, teclado e gestos habilitado');
+        console.log('🔊 Sistema de áudio e narração de acessibilidade pronto');
+        console.log('⭐ Sistema de conquistas ativo');
+        console.log('♿ Totalmente acessível para deficientes visuais e baixa visão');
+        console.log('🎯 Jogo LINEAR - complete níveis em ordem');
+    </script>
+</body>
+</html>
